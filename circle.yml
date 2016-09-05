@@ -17,6 +17,10 @@ deployment:
     branch: /^bugfix.*/
     commands: 
       - "./scripts/circle.bash merge release/patch"
+  feature141:
+    branch: feature/141/v2
+    commands:
+      - "./scripts/circle.bash merge release/major"
   feature231:
     branch: feature/231/client_security
     commands:
@@ -38,6 +42,10 @@ deployment:
     branch: release/patch
     commands: 
       - "./scripts/circle.bash merge release/minor"
+  remove_config_path_parents:
+    branch: spike/remove_config_path_parents
+    commands:
+      - "./scripts/circle.bash merge release/major"
 machine: 
   environment:
     PUPPET_GEM_VERSION: '~> 4.0'
