@@ -523,6 +523,42 @@ this flag to false will disable this behaviour, therefore allowing the changes
 to be made but allow the user to control when the service is restarted.
 Default value true
 
+##### `settings`
+
+A hash that is passed to `to_yaml` which dumps the results to the Cassandra
+configuring file.  The minimum required settings for Cassandra 2.X
+are as follows:
+
+```puppet
+{
+  'authenticator'               => 'PasswordAuthenticator',
+  'cluster_name'                => 'MyCassandraCluster',
+  'commitlog_directory'         => '/var/lib/cassandra/commitlog',
+  'commitlog_sync'              => 'periodic',
+  'commitlog_sync_period_in_ms' => 10000,
+  'data_file_directories'       => ['/var/lib/cassandra/data'],
+  'endpoint_snitch'             => 'GossipingPropertyFileSnitch',
+  'listen_address'              => $::ipaddress,
+  'partitioner'                 => 'org.apache.cassandra.dht.Murmur3Partitioner',
+  'saved_caches_directory'      => '/var/lib/cassandra/saved_caches',
+  'seed_provider'               => [
+    {
+      'class_name' => 'org.apache.cassandra.locator.SimpleSeedProvider',
+      'parameters' => [
+        {
+          'seeds' => $::ipaddress,
+        },
+      ],
+    },
+  ],
+  'start_native_transport'      => true,
+}
+```
+
+For Cassandra 3.X you will also need to specify the `hints_directory`
+attribute.
+Default value {}
+
 ##### `snitch_properties_file`
 The name of the snitch properties file.  The full path name would be
 *config_path*/*snitch_properties_file*.
@@ -553,6 +589,10 @@ class { 'cassandra::datastax_agent':
   },
 }
 ```
+
+##### `address_config_file`
+The full path to the address config file.
+Default value '/var/lib/datastax-agent/conf/address.yaml'
 
 ##### `defaults_file`
 The full path name to the file where `java_home` is set.
@@ -696,6 +736,11 @@ Allow these TCP ports to be opened for traffic
 between the Cassandra nodes.
 Default value '[7000, 7001, 7199]'
 
+##### `inter_node_ports`
+Allow these TCP ports to be opened for traffic
+coming from OpsCenter subnets.
+Default value '[7000, 7001, 7199]'
+
 ##### `inter_node_subnets`
 Only has any effect if the `cassandra` class is defined on the node.
 
@@ -703,11 +748,6 @@ An array of the list of subnets that are to allowed connection to
 cassandra::storage_port, cassandra::ssl_storage_port and port 7199
 for cassandra JMX monitoring.
 Default value '['0.0.0.0/0']'
-
-##### `inter_node_ports`
-Allow these TCP ports to be opened for traffic
-coming from OpsCenter subnets.
-Default value '[7000, 7001, 7199]'
 
 ##### `public_ports`
 Allow these TCP ports to be opened for traffic
@@ -872,6 +912,10 @@ be passed to the `create_resources` function. Default: {}.
 Creates new `cassandra::schema::table` resources. Valid options: a hash to
 be passed to the `create_resources` function. Default: {}.
 
+##### `users`
+Creates new `cassandra::schema::user` resources. Valid options: a hash to
+be passed to the `create_resources` function. Default: {}.
+
 #### Defined Type cassandra::schema::cql_type
 
 Create or drop user defined data types within the schema.  Please see the
@@ -888,22 +932,24 @@ Valid values can be **present** to ensure a data type is created, or
 A hash of the fields that will be components for the data type.  See
 the example earlier in this document for the layout of the hash.
 
+##### `cql_type_name`
+The name of the CQL type to be created.  Defaults to the title of the
+resource.
+
 #### Defined Type cassandra::schema::index
 
 Create or drop indexes within the schema.  Please see the
 [Begining with Cassandra](#beginning-with-cassandra) section of this document.
 
+##### `ensure`
+Valid values can be **present** to ensure an index is created, or
+**absent** to ensure it is dropped.
+
 ##### `class_name`
-The name of the class to be associated with a class when creating
-a custom class.
+The name of the class to be associated with an index when creating
+a custom index.
 
 Default value *undef*
-
-##### `keyspace`
-The name of the keyspace that the index is to be associated with.
-
-##### `table`
-The name of the table that the index is to be associated with.
 
 ##### `index`
 The name of the index.  Defaults to the name of the resource.  Set to
@@ -914,27 +960,21 @@ The columns that the index is being created on.
 
 Default value *undef*
 
+##### `keyspace`
+The name of the keyspace that the index is to be associated with.
+
 ##### `options`
 Any options to be added to the index.
 
 Default value *undef*
 
+##### `table`
+The name of the table that the index is to be associated with.
+
 #### Defined Type cassandra::schema::keyspace
 
 Create or drop keyspaces within the schema.  Please see the example code in the
 [Begining with Cassandra](#beginning-with-cassandra) section of this document.
-
-##### `replication_map`
-Needed if the keyspace is to be present.  Optional if it is to be absent.
-Can be something like the following:
-
-```puppet
-$network_topology_strategy = {
-  keyspace_class => 'NetworkTopologyStrategy',
-  dc1            => 3,
-  dc2            => 2
-}
-```
 
 ##### `ensure`
 Valid values can be **present** to ensure a keyspace is created, or
@@ -947,6 +987,18 @@ false on a keyspace using the SimpleStrategy. Default value true.
 
 ##### `keyspace_name`
 The name of the keyspace to be created. Defaults to the name of the resource.
+
+##### `replication_map`
+Needed if the keyspace is to be present.  Optional if it is to be absent.
+Can be something like the following:
+
+```puppet
+$network_topology_strategy = {
+  keyspace_class => 'NetworkTopologyStrategy',
+  dc1            => 3,
+  dc2            => 2
+}
+```
 
 #### Defined Type cassandra::schema::table
 
@@ -974,7 +1026,6 @@ Options to be added to the table creation.
 
 Default value []
 
-
 ##### `table`
 The name of the table.  Defaults to the name of the resource.
 
@@ -996,16 +1047,13 @@ A password for the user.  Default value *undef*.
 If the user is to be a super-user on the system.  Default value false.
 
 ##### `user_name`
-The name of the user.  Defaults to the name of the resource.
+The name of the user.  Defaults to the title of the resource.
 
 #### Defined Type cassandra::private::deprecation_warning
 
 A defined type to handle deprecation messages to the user.
 This is not intended to be used by a user but is documented here for
 completeness.
-
-##### `title`
-The text of the message for the user.
 
 ##### `item_number`
 A unique reference number for the specific deprecation.
