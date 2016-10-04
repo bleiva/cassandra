@@ -5,7 +5,8 @@ describe 'cassandra::java' do
       'class apt () {}',
       'class apt::update () {}',
       'define apt::key ($id, $server) {}',
-      'define apt::source ($location, $comment, $release, $repos) {}'
+      'define apt::source ($location, $comment, $release, $repos) {}',
+      'define file_line($line, $path) {}'
     ]
   end
 
@@ -148,6 +149,12 @@ describe 'cassandra::java' do
   end
 
   context 'Ensure temp_directory can be set' do
+    let :facts do
+      {
+        osfamily: 'RedHat'
+      }
+    end
+
     let :params do
       {
         temp_directory: '/tmp/java-tibers-temp'
@@ -155,8 +162,16 @@ describe 'cassandra::java' do
     end
 
     it do
-      is_expected.to contain_file_line('/etc/cassandra/conf/jvm.options')
-        .with_content('-Djava.io.tmpdir=/tmp/java-tibers-temp')
+      should contain_file('/tmp/java-tibers-temp').with(
+        ensure: 'directory',
+        owner: 'cassandra',
+        group: 'cassandra',
+        mode: '0750'
+      )
+      should contain_file_line('Setting java temp directory to /tmp/java-tibers-temp').with(
+        path: '/etc/cassandra/conf/jvm.options',
+        line: '-Djava.io.tmpdir=/tmp/java-tibers-temp',
+      )
     end
   end
 
