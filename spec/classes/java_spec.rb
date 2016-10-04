@@ -170,7 +170,7 @@ describe 'cassandra::java' do
       )
       should contain_file_line('Setting java temp directory to /tmp/java-tibers-temp').with(
         path: '/etc/cassandra/conf/jvm.options',
-        line: '-Djava.io.tmpdir=/tmp/java-tibers-temp',
+        line: '-Djava.io.tmpdir=/tmp/java-tibers-temp'
       )
     end
   end
