@@ -18,6 +18,9 @@ describe 'cassandra class' do
          $version = '3.0.3'
       }
 
+     class { 'cassandra::java':
+       temp_directory => '/var/lib/cassandra/tmp',
+     } ->
      class { 'cassandra':
        authenticator               => 'PasswordAuthenticator',
        cassandra_9822              => true,
