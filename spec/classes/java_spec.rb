@@ -157,6 +157,7 @@ describe 'cassandra::java' do
 
     let :params do
       {
+        config_path: '/etc/cassandra/conf',
         temp_directory: '/tmp/java-tibers-temp'
       }
     end
