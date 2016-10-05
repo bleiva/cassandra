@@ -248,7 +248,7 @@ class cassandra (
       $comment = 'Cassandra database,,,'
       $home = '/var/lib/cassandra'
       exec { 'Cassandra User':
-        command => "${useradd} -c '$comment' -d '${home}' -m -s '/bin/false' cassandra",
+        command => "${useradd} -c '${comment}' -d '${home}' -m -s '/bin/false' cassandra",
         unless  => '/usr/bin/id cassandra',
       }
       # End of CASSANDRA-2356 specific resources.
