@@ -218,10 +218,10 @@ class cassandra (
       }
     }
     'Debian': {
-      $config_file_require = [ User['cassandra'], File[$config_path_recurse] ]
+      $config_file_require = [ Exec['Cassandra User'], File[$config_path_recurse] ]
       $config_file_before  = Package['cassandra']
       $config_path_recurse_require = []
-      $dc_rack_properties_file_require = [ User['cassandra'], File[$config_path_recurse] ]
+      $dc_rack_properties_file_require = [ Exec['Cassandra User'], File[$config_path_recurse] ]
       $dc_rack_properties_file_before  = Package['cassandra']
       $data_dir_require = File[$config_file]
       $data_dir_before = Package['cassandra']
@@ -243,18 +243,13 @@ class cassandra (
         before      => Service['cassandra'],
       }
 
-      group { 'cassandra':
-        ensure  => 'present',
-      }
-
-      user { 'cassandra':
-        ensure     => 'present',
-        comment    => 'Cassandra database,,,',
-        gid        => 'cassandra',
-        home       => '/var/lib/cassandra',
-        shell      => '/bin/false',
-        managehome => true,
-        require    => Group['cassandra']
+      # Create cassandra user this way to avoid clashes in #280.
+      $useradd = '/usr/sbin/useradd'
+      $comment = 'Cassandra database,,,'
+      $home = '/var/lib/cassandra'
+      exec { 'Cassandra User':
+        command => "${useradd} -c '$comment' -d '${home}' -m -s '/bin/false' cassandra",
+        unless  => '/usr/bin/id cassandra',
       }
       # End of CASSANDRA-2356 specific resources.
     }
