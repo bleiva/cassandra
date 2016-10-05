@@ -58,16 +58,17 @@ describe 'cassandra' do
         .that_comes_before('Service[cassandra]')
         .that_subscribes_to('Package[cassandra]')
 
-      should contain_group('cassandra')
-      should contain_user('cassandra')
-        .that_requires('Group[cassandra]')
+      should contain_exec('Cassandra User').with(
+        command: "/usr/sbin/useradd -c 'Cassandra database,,,' -d '/var/lib/cassandra' -m -s '/bin/false' cassandra",
+        unless: '/usr/bin/id cassandra',
+      )
 
       should contain_file('/etc/cassandra/cassandra.yaml')
         .that_comes_before('Package[cassandra]')
-        .that_requires(['User[cassandra]', 'File[/etc/cassandra]'])
+        .that_requires(['Exec[Cassandra User]', 'File[/etc/cassandra]'])
 
       should contain_file('/etc/cassandra/cassandra-rackdc.properties')
-        .that_requires(['File[/etc/cassandra]', 'User[cassandra]'])
+        .that_requires(['File[/etc/cassandra]', 'Exec[Cassandra User]'])
         .that_comes_before('Package[cassandra]')
 
       should contain_file('/var/lib/cassandra/commitlog')
