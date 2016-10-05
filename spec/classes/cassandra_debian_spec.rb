@@ -60,7 +60,7 @@ describe 'cassandra' do
 
       should contain_exec('Cassandra User').with(
         command: "/usr/sbin/useradd -c 'Cassandra database,,,' -d '/var/lib/cassandra' -m -s '/bin/false' cassandra",
-        unless: '/usr/bin/id cassandra',
+        unless: '/usr/bin/id cassandra'
       )
 
       should contain_file('/etc/cassandra/cassandra.yaml')
