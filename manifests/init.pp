@@ -6,7 +6,7 @@
 class cassandra (
   $cassandra_2356_sleep_seconds                         = 5,
   $cassandra_9822                                       = false,
-  $cassandra_yaml_tmpl                                  = 'cassandra/cassandra.yaml.erb',
+  $cassandra_yaml_tmpl                                  = template('cassandra/cassandra.yaml.erb'),
   $config_file_mode                                     = '0644',
   $config_path                                          = $::cassandra::params::config_path,
   $dc                                                   = 'DC1',
@@ -127,7 +127,7 @@ class cassandra (
     ensure  => present,
     owner   => 'cassandra',
     group   => 'cassandra',
-    content => template($cassandra_yaml_tmpl),
+    content => $cassandra_yaml_tmpl,
     mode    => $config_file_mode,
     require => $config_file_require,
     before  => $config_file_before,
